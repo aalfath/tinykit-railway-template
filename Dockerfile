@@ -53,7 +53,6 @@ RUN chmod 755 /usr/local/bin/tinykit-start && mkdir -p /app/pocketbase/pb_data
 ENV NODE_ENV=production \
     PORT=3000 \
     BODY_SIZE_LIMIT=10M
-VOLUME ["/app/pocketbase/pb_data"]
 EXPOSE 3000
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/usr/local/bin/tinykit-start"]

@@ -12,7 +12,7 @@ One service, **Tinykit**, built from this repo:
 |---|---|
 | Tinykit | **0.1.1**, upstream commit [`b4aea2b`](https://github.com/tinykit-studio/tinykit/commit/b4aea2b575dbb149f2c4b9b01f8f0603d7c23da1) (the "v0.1.1 maintenance" merge, 2026-11-08) |
 | PocketBase | 0.23.4 (the version Tinykit pins), SHA-256 checked |
-| Base image | `node:22.23.5-alpine3.24@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a` |
+| Base image | `node:22.23.5-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee` |
 | Volume | `/app/pocketbase/pb_data`: the database, uploads, built apps and settings |
 | Health check | `/_pb/api/health` (answers only when both Tinykit and PocketBase are up) |
 

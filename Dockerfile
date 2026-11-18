@@ -3,7 +3,7 @@
 # deploy/docker/Dockerfile, with the base image, the source commit and the
 # PocketBase binary all pinned and checked.
 
-ARG NODE_IMAGE=node:22.23.5-alpine3.24@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a
+ARG NODE_IMAGE=node:22.23.5-bookworm-slim@sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee
 
 FROM ${NODE_IMAGE} AS build
 # Tinykit 0.1.1 ("v0.1.1 maintenance", merged 2026-11-08)
@@ -14,7 +14,9 @@ ARG PB_VERSION=0.23.4
 ARG PB_SHA256_AMD64=274173785fcaefcecc69a82057d7fa9c813d23dda6c7781374f952019232a366
 ARG PB_SHA256_ARM64=0d3e45374f8abab2a0de83688ac9258995b07bced0de140e4aca8c6d0d88bd50
 ARG TARGETARCH=amd64
-RUN apk add --no-cache git unzip
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl git unzip \
+ && rm -r /var/lib/apt/lists/*
 WORKDIR /app
 RUN git init -q . \
  && git fetch -q --depth 1 https://github.com/tinykit-studio/tinykit.git "${TINYKIT_COMMIT}" \
@@ -27,7 +29,7 @@ RUN case "${TARGETARCH}" in \
       arm64) sum="${PB_SHA256_ARM64}" ;; \
       *) echo "unsupported arch ${TARGETARCH}"; exit 1 ;; \
     esac \
- && wget -qO /tmp/pb.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_${TARGETARCH}.zip" \
+ && curl -fsSL -o /tmp/pb.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_${TARGETARCH}.zip" \
  && echo "${sum}  /tmp/pb.zip" | sha256sum -c - \
  && unzip -q -o /tmp/pb.zip pocketbase -d pocketbase \
  && chmod 755 pocketbase/pocketbase \
@@ -37,7 +39,9 @@ RUN npm ci --include=dev --no-audit --no-fund \
  && npm prune --omit=dev --no-audit --no-fund
 
 FROM ${NODE_IMAGE}
-RUN apk add --no-cache curl tini
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl tini \
+ && rm -r /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
@@ -51,5 +55,5 @@ ENV NODE_ENV=production \
     BODY_SIZE_LIMIT=10M
 VOLUME ["/app/pocketbase/pb_data"]
 EXPOSE 3000
-ENTRYPOINT ["/sbin/tini", "--"]
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["/usr/local/bin/tinykit-start"]
